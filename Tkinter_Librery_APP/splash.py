@@ -1,18 +1,25 @@
-import customtkinter as ctk
-from PIL import Image, UnidentifiedImageError
-import subprocess
-import sqlite3
-import os
+import customtkinter as ctk  # CustomTkinter for modern GUI design with tkinter.
+from PIL import Image, UnidentifiedImageError  # Module to load and handle images.
+import subprocess  # Module to execute external scripts or programs.
+import sqlite3  # SQLite3 for database management.
+import os  # Module to interact with the file system.
 
-# Function to display the splash screen
+# -------------------------------------------
+# Function: splash_screen_main
+# Purpose:
+# This function creates and manages a splash screen window. It displays a background image,
+# checks for database connectivity, and then launches the next script (e.g., login window).
+# -------------------------------------------
 def splash_screen_main():
-    # Create the splash screen window
+    # Block: Initialize Splash Screen Window
+    # Creates a splash screen window with fixed size and no borders.
     splash_root = ctk.CTk()
     splash_root.geometry('400x400')
     splash_root.resizable(False, False)
-    splash_root.overrideredirect(True)  # Remove window borders and title bar
+    splash_root.overrideredirect(True)
 
-    # Center the splash screen window on the screen
+    # Block: Center Window on Screen
+    # Centers the splash screen window on the user's display.
     screen_width = splash_root.winfo_screenwidth()
     screen_height = splash_root.winfo_screenheight()
     window_width = 400
@@ -21,7 +28,7 @@ def splash_screen_main():
     pos_y = (screen_height // 2) - (window_height // 2)
     splash_root.geometry(f'{window_width}x{window_height}+{pos_x}+{pos_y}')
 
-    # Label to display messages during splash screen
+    # Block: Message Label for Errors/Status
     splash_label_msg = ctk.CTkLabel(
         splash_root,
         text=' ',
@@ -31,10 +38,14 @@ def splash_screen_main():
     )
     splash_label_msg.place(x=70, y=350)
 
-    # Function to load the splash screen background image
+    # -------------------------------------------
+    # Function: load_background_image
+    # Purpose:
+    # Attempts to load the background image for the splash screen.
+    # If not found or invalid, it displays an error message.
+    # -------------------------------------------
     def load_background_image():
         try:
-            # Load the background image for the splash screen
             splash_imagen_center = ctk.CTkImage(
                 light_image=Image.open('./images/fondo_splash.jpg'),
                 dark_image=Image.open('./images/fondo_splash.jpg'),
@@ -42,7 +53,6 @@ def splash_screen_main():
             )
             return splash_imagen_center
         except (FileNotFoundError, UnidentifiedImageError):
-            # Display error message if the image is not found or invalid
             error_label = ctk.CTkLabel(
                 splash_root,
                 text="Background image not found.",
@@ -56,7 +66,7 @@ def splash_screen_main():
             splash_root.update_idletasks()
             return None
 
-    # Load the background image and set it if available
+    # Block: Load Background Image
     splash_imagen_center = load_background_image()
     if splash_imagen_center:
         splash_image_properties = ctk.CTkLabel(
@@ -67,48 +77,62 @@ def splash_screen_main():
         )
         splash_image_properties.place(x=0, y=0)
 
-    # Ensure the message label appears above the background image
-    splash_label_msg.lift()
+    splash_label_msg.lift()  # Ensures message label appears above background image.
 
-    # Function to check the database connection
+    # -------------------------------------------
+    # Function: check_db_connection
+    # Purpose:
+    # Verifies if the SQLite database file exists and connects successfully.
+    # If successful, proceeds to the next step.
+    # -------------------------------------------
     def check_db_connection():
         db_path = './db/bookstore_management.db'
         if os.path.exists(db_path):
             try:
-                # Attempt to connect to the database
                 conn = sqlite3.connect(db_path)
                 conn.close()
-                data_update_check()  # Proceed to the next step if successful
+                data_update_check()
             except sqlite3.Error:
-                # Show error message if database connection fails
                 splash_label_msg.configure(text="Database connection failed.")
                 splash_root.update_idletasks()
                 splash_root.after(2000, splash_root.destroy)
         else:
-            # Show error message if the database file is not found
             splash_label_msg.configure(text="Database not found.")
             splash_root.update_idletasks()
             splash_root.after(2000, splash_root.destroy)
 
-    # Function to simulate a recognition or loading process
+    # -------------------------------------------
+    # Function: start_reconocimiento
+    # Purpose:
+    # Simulates an initial recognition process before checking the database.
+    # -------------------------------------------
     def start_reconocimiento():
         splash_root.update_idletasks()
         splash_root.after(1000, check_db_connection)
 
-    # Function to check for data updates or other processes
+    # -------------------------------------------
+    # Function: data_update_check
+    # Purpose:
+    # Simulates a data update process before opening the next script.
+    # -------------------------------------------
     def data_update_check():
         splash_root.update_idletasks()
         splash_root.after(1000, open_next_script)
 
-    # Function to open the next script (e.g., login window) after splash screen
+    # -------------------------------------------
+    # Function: open_next_script
+    # Purpose:
+    # Launches the login window script and closes the splash screen.
+    # -------------------------------------------
     def open_next_script():
         subprocess.Popen(["pythonw", "login.py"], creationflags=subprocess.CREATE_NO_WINDOW)
         splash_root.destroy()
 
-    # Start the recognition process after 1 second
+    # Block: Start Splash Screen Logic
     splash_root.after(1000, start_reconocimiento)
 
-    # Run the splash screen's event loop
+    # Block: Run Main Loop
     splash_root.mainloop()
 
+# Call Main Function to Start Splash Screen
 splash_screen_main()
