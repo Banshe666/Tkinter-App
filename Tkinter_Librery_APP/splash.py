@@ -102,11 +102,11 @@ def splash_screen_main():
 
     # Function to open the next script (e.g., login window) after splash screen
     def open_next_script():
-        subprocess.Popen(["python", "login.py"])
+        subprocess.Popen(["pythonw", "login.py"], creationflags=subprocess.CREATE_NO_WINDOW)
         splash_root.destroy()
 
     # Start the recognition process after 1 second
-    splash_root.after(1000, start_reconocimiento())
+    splash_root.after(1000, start_reconocimiento)
 
     # Run the splash screen's event loop
     splash_root.mainloop()

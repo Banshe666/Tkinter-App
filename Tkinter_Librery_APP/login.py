@@ -5,6 +5,7 @@ import sqlite3
 import subprocess
 from functions import exit_command
 
+
 # Function to display the login screen
 def login_screen_main():
     # Create the main login window
@@ -160,12 +161,14 @@ def login_screen_main():
             conn.close()
 
             if result:
-                subprocess.run(["python", "main_data.py", username_var.get()])
+                subprocess.Popen(["pythonw", "main_data.py", username_var.get()], creationflags=subprocess.CREATE_NO_WINDOW)
                 login_root.destroy()
             else:
                 miss_data.place(x=300, y=240)
         except sqlite3.Error as e:
             messagebox.showerror("Database Error", f"An error occurred: {e}")
+
+
 
     # Login button
     login_button = ctk.CTkButton(

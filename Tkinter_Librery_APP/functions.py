@@ -1,3 +1,7 @@
+import customtkinter as ctk
+from tkinter import messagebox
+import sqlite3
+
 # Function to create an exit confirmation window when attempting to close the application
 def exit_command(login_root):
 
@@ -60,21 +64,69 @@ def exit_command(login_root):
                                   hover_color='#9fa081')
     cancel_button.place(x=150, y=110)
 
-# Functions to enable window dragging functionality
 
-# Initiates the move operation by capturing the offset of the mouse pointer
-def start_move(event, root):
-    root._offsetx = event.x
-    root._offsety = event.y
 
-# Stops the move operation by resetting the offset
-def stop_move(event, root):
-    root._offsetx = None
-    root._offsety = None
+def delete_item(main_root, tabla_information):
 
-# Moves the window based on the current mouse position and the captured offset
-def do_move(event, root):
-    if root._offsetx is not None and root._offsety is not None:
-        x = event.x_root - root._offsetx
-        y = event.y_root - root._offsety
-        root.geometry(f"+{x}+{y}")
+    conn = sqlite3.connect('./db/bookstore_management.db')
+    cursor = conn.cursor()
+
+    selected_item = tabla_information.selection()
+
+    if selected_item:
+
+        book_id = tabla_information.item(selected_item[0])['values'][0]
+
+
+        message = messagebox.askyesno('Message', 'Do you want to delete this book?', parent=main_root)
+        if message:
+            try:
+
+                cursor.execute("DELETE FROM books WHERE book_id = ?", (book_id,))
+                conn.commit()
+
+
+                cursor.execute("""
+                    WITH Ordered AS (
+                        SELECT rowid, book_id, ROW_NUMBER() OVER (ORDER BY book_id) AS new_id
+                        FROM books
+                    )
+                    UPDATE books
+                    SET book_id = (SELECT new_id FROM Ordered WHERE Ordered.rowid = books.rowid)
+                """)
+                conn.commit()
+
+
+                refresh_table(tabla_information, cursor)
+
+                messagebox.showinfo('Message', 'Book deleted successfully!', parent=main_root)
+            except Exception as e:
+                messagebox.showerror('Error', f"An error occurred: {e}", parent=main_root)
+    else:
+        messagebox.showinfo('Message', "No item selected", parent=main_root)
+
+
+    conn.close()
+
+
+def refresh_table(tabla_information, cursor):
+    for row in tabla_information.get_children():
+        tabla_information.delete(row)
+
+
+    cursor.execute("SELECT book_id, book_name, book_publisher, author_name, book_year, book_genre, book_language, book_ISBN, book_quantity FROM books ORDER BY book_id")
+    for row in cursor.fetchall():
+        tabla_information.insert("", "end", values=row)
+
+def deselect_item(event, tabla_information):
+    if not tabla_information.winfo_containing(event.x_root, event.y_root) == tabla_information:
+        tabla_information.selection_remove(tabla_information.selection())
+
+
+# Function to update the welcome label with the username.
+# Displays "Guest" if no username is provided.
+def update_user_name_label(name_label, username):
+    if username:
+        name_label.configure(text=f"Welcome, {username.upper()}")
+    else:
+        name_label.configure(text="Welcome, Guest")
